@@ -1,0 +1,47 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+
+  config.vm.box = "cg5labs/xenserver-6.5.0"
+
+  # disable mounting of vagrant folder as its not supported on xenserver
+  config.vm.synced_folder '.', '/vagrant', disabled: true
+
+  # disable checking for vbguest versions as its not supported on xenserver
+  if Vagrant.has_plugin?('vagrant-vbguest')
+    config.vbguest.auto_update = false
+  end
+
+  # SSH login as root so don't use sudo
+  config.ssh.username = "root"
+  config.ssh.sudo_command= ""
+  
+  vm_memory = "4096"
+  vm_cpus = "2"
+
+ config.vm.provider "libvirt" do |libvirt|
+
+    libvirt.driver = 'kvm'
+    libvirt.username = 'root'
+    libvirt.nic_model_type = "e1000"
+    libvirt.disk_bus = 'ide'
+    libvirt.storage_pool_name = 'default'
+
+    # enable svm/vmx for nested virtualization support
+    libvirt.nested = true
+
+    # mac address needs to match the eth0 interface (mgmt) on the XenServer VM
+    libvirt.management_network_mac = "52:54:00:12:34:56"
+
+    if (defined?(vm_cpus))
+      libvirt.cpus = vm_cpus
+    end
+
+    if (defined?(vm_memory))
+      libvirt.memory = vm_memory
+    end
+
+  end
+
+end
